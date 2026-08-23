@@ -41,7 +41,10 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           message?.toLowerCase().includes('password')
         ) {
           setError('Incorrect email or password.')
-        } else {
+        } else if(message?.includes("UNAUTHORIZED")){
+          setError("Invalid credentials! please visit signup page...")
+        }
+        else {
           setError(message ?? 'Something went wrong. Please try again.')
         }
         return
@@ -116,7 +119,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           </div>
 
           {error && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-sm text-red-400 error-message" role="alert">
               {error}
             </p>
           )}

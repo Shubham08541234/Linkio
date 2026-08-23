@@ -47,10 +47,5 @@
     "tailwindcss": "^4.2.0",
     "typescript": "5.7.3"
   },
-  "pnpm": {
-    "overrides": {
-      "hono": "4.12.25"
-    }
-  },
   "packageManager": "pnpm@11.18.0+sha512.33d83c77da82f49fba836925c6f1b841181ec3132b670639bd012f7075f5c7cf634c5f870147c19aae7478fac01df09d8892e880454896edd23ee9b33757563c"
 }

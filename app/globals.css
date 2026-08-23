@@ -61,7 +61,7 @@
   --muted-foreground: 0.65 0 0;
   --accent: 0.5 0.2 264;
   --accent-foreground: 0.95 0 0;
-  --destructive: 0.62 0.22 29;
+  --destructive: oklch(0.62 0.22 29);
   --border: 1 0 0 / 10%;
   --input: 1 0 0 / 15%;
   --ring: 0.5 0.2 264;
@@ -97,7 +97,7 @@
   --muted-foreground: 0.65 0 0;
   --accent: 0.5 0.2 264;
   --accent-foreground: 0.95 0 0;
-  --destructive: 0.62 0.22 29;
+  --destructive: oklch(0.62 0.22 29);
   --border: 1 0 0 / 10%;
   --input: 1 0 0 / 15%;
   --ring: 0.5 0.2 264;
@@ -133,7 +133,7 @@
     --muted-foreground: 0.65 0 0;
     --accent: 0.5 0.2 264;
     --accent-foreground: 0.95 0 0;
-    --destructive: 0.62 0.22 29;
+    --destructive: oklch(0.62 0.22 29);
     --border: 1 0 0 / 10%;
     --input: 1 0 0 / 15%;
     --ring: 0.5 0.2 264;
@@ -160,4 +160,28 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+
+@keyframes errorFade {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.error-message {
+  animation: errorFade 4s ease-in-out forwards;
 }
