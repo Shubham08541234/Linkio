@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { pool } from '@/lib/db'
+import { sendEmail } from '@/lib/email'
 
 export const auth = betterAuth({
   database: pool,
@@ -13,6 +14,25 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 15, // 15 minutes for token expiry
+    sendVerificationEmail: async ({ user, url }) => {
+      console.log('🔔 sendVerificationEmail fired for:', user.email)
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your email address',
+        html: `
+          <p>Hi ${user.name},</p>
+          <p>Click the link below to verify your email address:</p>
+          <p><a href="${url}">Verify email</a></p>
+          <p>If you didn't create an account, you can ignore this email.</p>
+        `,
+      })
+    },
   },
   trustedOrigins: [
     'http://localhost:3000',

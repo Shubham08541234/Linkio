@@ -19,7 +19,7 @@ export default async function Home() {
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <Link href="/" className="text-2xl font-bold bg-linear-to-r from-primary to-accent bg-clip-text">
             Linkio
           </Link>
           <div className="flex gap-4 items-center">

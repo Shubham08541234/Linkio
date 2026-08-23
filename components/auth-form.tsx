@@ -24,26 +24,43 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
     setError(null)
     setLoading(true)
 
-    
-
     try {
       const res = isSignUp
         ? await authClient.signUp.email({ email, password, name })
         : await authClient.signIn.email({ email, password })
-  
+
       console.log(res)
-  
-      setLoading(false)
-  
+
       if (res.error) {
-        setError(res.error.statusText ?? 'Something went wrong')
+        const message = res.error.statusText ?? res.error.message
+
+        if (message?.toLowerCase().includes('already exists')) {
+          setError('An account with this email already exists. Try signing in instead.')
+        } else if (
+          message?.toLowerCase().includes('invalid') &&
+          message?.toLowerCase().includes('password')
+        ) {
+          setError('Incorrect email or password.')
+        } else {
+          setError(message ?? 'Something went wrong. Please try again.')
+        }
         return
       }
-  
+
+      // Sign-up succeeded but no session/token means email verification
+      // is required before the user can be logged in.
+      if (isSignUp && !res.data?.token) {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`)
+        return
+      }
+
       router.push('/')
-      // router.refresh()
-    } catch (error) {
-      console.log("Request failed: ", error);
+      router.refresh()
+    } catch (err) {
+      console.error('Auth request failed:', err)
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 

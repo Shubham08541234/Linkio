@@ -12,10 +12,13 @@ import {
   Trash2,
   ExternalLink,
   Settings,
+  CheckCircle2,
+  XCircle,
+  MailWarning,
 } from "lucide-react";
 import CreateUrlDialog from "./create-url-dialog";
 import UrlTable from "./url-table";
-import { signOut } from "@/lib/auth-client";
+import { authClient, signOut } from "@/lib/auth-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +27,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 
 interface Url {
@@ -96,6 +100,18 @@ export default function DashboardClient({
     }
   };
 
+  const handleEmailVerification = async (email: string) => {
+    const res = await authClient.sendVerificationEmail({
+      email,
+      callbackURL: "/verify-email",
+    });
+
+    if (res.error) {
+      console.log(res.error);
+      return;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -115,28 +131,66 @@ export default function DashboardClient({
               <Plus className="w-4 h-4 mr-2" /> New Link
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger>{initial}</DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <button className="flex items-center justify-center h-9 w-9 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer" />
+                }
+              >
+                {initial}
+              </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel>
-                    <div>{user.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {user.email}
-                    </div>
-                  </DropdownMenuLabel>
+              <DropdownMenuPortal>
+                <DropdownMenuContent align="end" className="w-64 z-50">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col gap-1">
+                        <div className="text-sm font-medium text-foreground">
+                          {user.name}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </span>
+                          {user.emailVerified ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-[11px] font-medium w-fit px-1.5 py-0.5 rounded-full mt-0.5 ${
+                            user.emailVerified
+                              ? "bg-green-100 text-green-700"
+                              : "bg-destructive/10 text-destructive"
+                          }`}
+                        >
+                          {user.emailVerified ? "Verified" : "Not verified"}
+                        </span>
+                      </div>
+                    </DropdownMenuLabel>
 
-                  <DropdownMenuSeparator />
+                    <DropdownMenuSeparator />
 
-                  {!user.emailVerified && (
-                    <DropdownMenuItem>Verify Email</DropdownMenuItem>
-                  )}
+                    {!user.emailVerified && (
+                      <DropdownMenuItem
+                        onClick={() => handleEmailVerification(user.email)}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <MailWarning className="h-4 w-4" />
+                        Verify Email
+                      </DropdownMenuItem>
+                    )}
 
-                  <DropdownMenuItem onClick={handleLogout}>
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
             </DropdownMenu>
           </div>
         </div>

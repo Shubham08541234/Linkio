@@ -5,7 +5,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Linkio - URL Shortener with Analytics',
   description: 'Create branded short links with powerful analytics. Track every click and understand your audience in real-time.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
