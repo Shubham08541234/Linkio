@@ -61,7 +61,7 @@
   --muted-foreground: 0.65 0 0;
   --accent: 0.5 0.2 264;
   --accent-foreground: 0.95 0 0;
-  --destructive: oklch(0.62 0.22 29);
+  --destructive: 0.62 0.22 29;
   --border: 1 0 0 / 10%;
   --input: 1 0 0 / 15%;
   --ring: 0.5 0.2 264;
@@ -97,7 +97,7 @@
   --muted-foreground: 0.65 0 0;
   --accent: 0.5 0.2 264;
   --accent-foreground: 0.95 0 0;
-  --destructive: oklch(0.62 0.22 29);
+  --destructive: 0.62 0.22 29;
   --border: 1 0 0 / 10%;
   --input: 1 0 0 / 15%;
   --ring: 0.5 0.2 264;
@@ -133,7 +133,7 @@
     --muted-foreground: 0.65 0 0;
     --accent: 0.5 0.2 264;
     --accent-foreground: 0.95 0 0;
-    --destructive: oklch(0.62 0.22 29);
+    --destructive: 0.62 0.22 29;
     --border: 1 0 0 / 10%;
     --input: 1 0 0 / 15%;
     --ring: 0.5 0.2 264;
