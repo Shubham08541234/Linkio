@@ -103,9 +103,9 @@ export default function DashboardClient({
   const handleEmailVerification = async (email: string) => {
     const res = await authClient.sendVerificationEmail({
       email,
-      callbackURL: "/verify-email",
+      callbackURL: "/",
     });
-
+    console.log("res: ", res);
     if (res.error) {
       console.log(res.error);
       return;
