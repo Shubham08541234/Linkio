@@ -58,6 +58,7 @@ export default function DashboardClient({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+
   const initial =
     user.name?.charAt(0).toUpperCase() ?? user.email.charAt(0).toUpperCase();
 
@@ -105,7 +106,6 @@ export default function DashboardClient({
       email,
       callbackURL: "/",
     });
-    console.log("res: ", res);
     if (res.error) {
       console.log(res.error);
       return;

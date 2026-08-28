@@ -1,0 +1,1 @@
+ALTER TABLE "analytics" ADD COLUMN "visitorId" text NOT NULL;

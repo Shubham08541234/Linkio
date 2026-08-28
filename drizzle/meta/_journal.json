@@ -8,6 +8,20 @@
       "when": 1783974580187,
       "tag": "0000_groovy_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787859596403,
+      "tag": "0001_stale_sleepwalker",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787905484534,
+      "tag": "0002_nervous_skrulls",
+      "breakpoints": true
     }
   ]
 }

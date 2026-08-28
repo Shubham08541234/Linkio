@@ -6,7 +6,7 @@ import {
   serial,
   integer,
   date,
-  bigint,
+  unique
 } from 'drizzle-orm/pg-core'
 
 // --- Better Auth required tables -------------------------------------------
@@ -85,6 +85,9 @@ export const analytics = pgTable('analytics', {
   id: serial('id').primaryKey(),
   urlId: integer('urlId').notNull(),
   userId: text('userId').notNull(),
+
+  visitorId: text('visitorId').notNull(),
+  
   referrer: text('referrer'),
   userAgent: text('userAgent'),
   ipAddress: text('ipAddress'),
@@ -108,4 +111,8 @@ export const dailyStats = pgTable('dailyStats', {
   uniqueVisitors: integer('uniqueVisitors').notNull().default(0),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-})
+},
+(table) => ([
+    unique().on(table.urlId, table.date),
+  ])
+)

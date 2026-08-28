@@ -1,8 +1,12 @@
 import { db } from '@/lib/db'
-import { urls } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { urls, analytics, dailyStats } from '@/lib/db/schema'
+import { eq, sql, and, gte, lt } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import {UAParser} from 'ua-parser-js'
+import { IPinfoWrapper } from 'node-ipinfo'
+import { cookies } from 'next/headers'
+import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,13 +48,31 @@ export async function GET(
   // Extract analytics data
   const userAgent = headersList.get('user-agent') || undefined
   const referrer = headersList.get('referer') || undefined
-  const ipAddress = headersList.get('x-forwarded-for')?.split(',')[0] || undefined
+  const ipAddress =
+    headersList.get('x-forwarded-for')?.split(',')[0] || undefined
 
-  // Record the click (in background - don't wait for it)
-  recordClickInBackground(shortCode, {
+  // set visitorId as cookies if not exits
+  const cookieStore = await cookies();
+  let visitorId = cookieStore.get('visitorId')?.value;
+
+  if(!visitorId){
+    visitorId = crypto.randomUUID();
+
+    cookieStore.set('visitorId', visitorId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365,
+      path: '/',
+    })
+  }
+
+  // Record the click
+  await recordClickInBackground(url.id, url.userId, {
     userAgent,
     referrer,
     ipAddress,
+    visitorId
   })
 
   // Redirect to original URL
@@ -58,16 +80,106 @@ export async function GET(
 }
 
 async function recordClickInBackground(
-  shortCode: string,
+  urlId: number,
+  userId: string,
   analyticsData: {
     userAgent?: string
     referrer?: string
     ipAddress?: string
+    visitorId?: string
   }
 ) {
   try {
-    // We'll implement a server action call here in the future
-    // For now, this is a placeholder
+    //ip information
+
+    const ipinfoWrapper = new IPinfoWrapper(process.env.IPINFO_TOKEN || "");
+    const ipinfo = await ipinfoWrapper.lookupIp(analyticsData.ipAddress === "::1"? "1.1.1.1": analyticsData.ipAddress || "8.8.8.8");
+    // Parse User-Agent
+    const parser = new UAParser(analyticsData.userAgent)
+
+    const browser = parser.getBrowser()
+    const os = parser.getOS()
+    const device = parser.getDevice()
+
+    // 1. Increment total clicks
+    await db
+      .update(urls)
+      .set({
+        clicks: sql`${urls.clicks} + 1`,
+      })
+      .where(eq(urls.id, urlId))
+
+    // 2. Store analytics event
+    await db.insert(analytics).values({
+      urlId,
+      userId,
+
+      referrer: analyticsData.referrer,
+      userAgent: analyticsData.userAgent,
+      ipAddress: analyticsData.ipAddress,
+
+      visitorId: analyticsData.visitorId,
+
+      country: ipinfo.country,
+      city: ipinfo.city,
+
+      browser: browser.name,
+      browserVersion: browser.version,
+
+      os: os.name,
+      osVersion: os.version,
+
+      device: device.model,
+      deviceType: device.type,
+    })
+
+    // check if this visitor have already visited today or not
+
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(24, 0, 0, 0);
+
+    const existingVisitor = await db
+      .select({ id: analytics. id })
+      .from(analytics)
+      .where(
+        and(
+          eq(analytics.urlId, urlId),
+          eq(analytics.visitorId, analyticsData.visitorId),
+          gte(analytics.createdAt, startOfDay),
+          lt(analytics.createdAt, endOfDay)
+        )
+      )
+      .limit(1);
+
+    const isUniqueVisitor = existingVisitor.length === 0;
+
+    // 3. Get today's date
+    const today = new Date().toISOString().split('T')[0]
+
+    // 4. Update daily stats
+    await db
+      .insert(dailyStats)
+      .values({
+        urlId,
+        userId,
+        date: today,
+        clicks: 1,
+        uniqueVisitors: isUniqueVisitor ? 1 : 0,
+      })
+      .onConflictDoUpdate({
+        target: [dailyStats.urlId, dailyStats.date],
+        set: {
+          clicks: sql`${dailyStats.clicks} + 1`,
+
+          ...(isUniqueVisitor && {
+            uniqueVisitors: sql`${dailyStats.uniqueVisitors} + 1`,
+          }),
+          updatedAt: new Date(),
+        },
+      })
   } catch (error) {
     console.error('Failed to record click:', error)
   }

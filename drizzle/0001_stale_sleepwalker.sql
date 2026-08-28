@@ -1,0 +1,1 @@
+ALTER TABLE "dailyStats" ADD CONSTRAINT "dailyStats_urlId_date_unique" UNIQUE("urlId","date");
