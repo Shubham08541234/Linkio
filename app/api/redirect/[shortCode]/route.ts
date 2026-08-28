@@ -86,7 +86,7 @@ async function recordClickInBackground(
     userAgent?: string
     referrer?: string
     ipAddress?: string
-    visitorId?: string
+    visitorId: string
   }
 ) {
   try {
@@ -108,6 +108,31 @@ async function recordClickInBackground(
         clicks: sql`${urls.clicks} + 1`,
       })
       .where(eq(urls.id, urlId))
+
+    // check if this visitor have already visited today or not
+
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(24, 0, 0, 0);
+
+    const existingVisitor = await db
+      .select({ id: analytics. id })
+      .from(analytics)
+      .where(
+        and(
+          eq(analytics.urlId, urlId),
+          eq(analytics.visitorId, analyticsData.visitorId),
+          gte(analytics.createdAt, startOfDay),
+          lt(analytics.createdAt, endOfDay)
+        )
+      )
+      .limit(1);
+
+    console.log("existingVisitor: ", existingVisitor);
+    const isUniqueVisitor = existingVisitor.length === 0;
+    console.log("uqiqueVisitor: ", isUniqueVisitor);
 
     // 2. Store analytics event
     await db.insert(analytics).values({
@@ -132,29 +157,6 @@ async function recordClickInBackground(
       device: device.model,
       deviceType: device.type,
     })
-
-    // check if this visitor have already visited today or not
-
-    const now = new Date();
-    const startOfDay = new Date(now);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(now);
-    endOfDay.setHours(24, 0, 0, 0);
-
-    const existingVisitor = await db
-      .select({ id: analytics. id })
-      .from(analytics)
-      .where(
-        and(
-          eq(analytics.urlId, urlId),
-          eq(analytics.visitorId, analyticsData.visitorId),
-          gte(analytics.createdAt, startOfDay),
-          lt(analytics.createdAt, endOfDay)
-        )
-      )
-      .limit(1);
-
-    const isUniqueVisitor = existingVisitor.length === 0;
 
     // 3. Get today's date
     const today = new Date().toISOString().split('T')[0]
