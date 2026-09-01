@@ -96,10 +96,10 @@ async function recordClickInBackground(
     const ipinfo = await ipinfoWrapper.lookupIp(analyticsData.ipAddress === "::1"? "1.1.1.1": analyticsData.ipAddress || "8.8.8.8");
     // Parse User-Agent
     const parser = new UAParser(analyticsData.userAgent)
-
     const browser = parser.getBrowser()
     const os = parser.getOS()
     const device = parser.getDevice()
+    console.log("device: ", device);
 
     // 1. Increment total clicks
     await db
@@ -154,8 +154,8 @@ async function recordClickInBackground(
       os: os.name,
       osVersion: os.version,
 
-      device: device.model,
-      deviceType: device.type,
+      device: device.model ?? "desktop",
+      deviceType: device.type ?? device.vendor ?? "desktop",
     })
 
     // 3. Get today's date

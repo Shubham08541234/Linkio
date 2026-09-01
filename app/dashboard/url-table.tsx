@@ -1,9 +1,11 @@
 "use client";
 
-import { Copy, Trash2, ExternalLink, QrCode } from "lucide-react";
+import { Copy, Trash2, ExternalLink, QrCode, ChartNoAxesCombined } from "lucide-react";
 import QRCode from "react-qr-code";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@base-ui/react/dialog";
+
+import { useRouter } from "next/navigation";
 
 interface Url {
   id: number;
@@ -35,6 +37,7 @@ export default function UrlTable({
     }).format(new Date(date));
   };
 
+  const router = useRouter();
   const getShortUrl = (shortCode: string) => {
     if (typeof window === "undefined") return "";
 
@@ -188,6 +191,16 @@ export default function UrlTable({
                         </Dialog.Popup>
                       </Dialog.Portal>
                     </Dialog.Root>
+
+                    {/* Analytics */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => router.push(`/dashboard/analytics/${url.id}`)}
+                      title="View analytics"
+                    >
+                      <ChartNoAxesCombined className="w-4 h-4" />
+                    </Button>
 
                     {/* Delete */}
                     <Button
