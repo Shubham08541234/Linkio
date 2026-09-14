@@ -9,7 +9,8 @@ import { revalidatePath } from 'next/cache'
 import { nanoid } from 'nanoid'
 import crypto from 'crypto'
 
-async function getUserId() {
+async function getUserId(userIdOverride?: String) {
+  if(userIdOverride) return userIdOverride;
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) throw new Error('Unauthorized')
   return session.user.id
@@ -38,8 +39,8 @@ export async function createUrl(data: {
   expiresAt?: Date
   maxClicks?: number
   customAlias?: string
-}) {
-  const userId = await getUserId()
+}, userIdOverride?: String) {
+  const userId = await getUserId(userIdOverride)
 
   // Validate URL
   try {
@@ -88,8 +89,8 @@ export async function getUrls(options?: {
   archived?: boolean
   limit?: number
   offset?: number
-}) {
-  const userId = await getUserId()
+}, userIdOverride?: String) {
+  const userId = await getUserId(userIdOverride)
 
   let query = db
     .select()
@@ -114,17 +115,20 @@ export async function getUrls(options?: {
   return await query
 }
 
-export async function getUrlById(id: number) {
-  const userId = await getUserId()
+// Example modification in actions/urls.ts
+
+export async function getUrlById(id: number, userIdOverride?: string) {
+  const userId = await getUserId(userIdOverride);
 
   const result = await db
     .select()
     .from(urls)
     .where(and(eq(urls.id, id), eq(urls.userId, userId)))
-    .limit(1)
+    .limit(1);
 
-  return result[0] || null
+  return result[0] || null;
 }
+
 
 export async function updateUrl(
   id: number,
@@ -132,9 +136,9 @@ export async function updateUrl(
     title?: string
     description?: string
     archived?: boolean
-  }
+  },userIdOverride?: String
 ) {
-  const userId = await getUserId()
+  const userId = await getUserId(userIdOverride)
 
   const result = await db
     .update(urls)
@@ -149,8 +153,8 @@ export async function updateUrl(
   return result[0]
 }
 
-export async function deleteUrl(id: number) {
-  const userId = await getUserId()
+export async function deleteUrl(id: number, userIdOverride?: String) {
+  const userId = await getUserId(userIdOverride)
 
   await db.delete(urls).where(and(eq(urls.id, id), eq(urls.userId, userId)))
 
@@ -227,8 +231,8 @@ export async function recordClick(shortCode: string, analyticsData: {
   }
 }
 
-export async function getUrlAnalytics(urlId: number) {
-  const userId = await getUserId()
+export async function getUrlAnalytics(urlId: number, userIdOverride?: String) {
+  const userId = await getUserId(userIdOverride)
 
   const url = await db
     .select()
@@ -259,8 +263,8 @@ export async function getUrlAnalytics(urlId: number) {
   }
 }
 
-export async function getUrlStats(urlId: number) {
-  const userId = await getUserId()
+export async function getUrlStats(urlId: number, userIdOverride?: String) {
+  const userId = await getUserId(userIdOverride)
 
   const url = await db
     .select()

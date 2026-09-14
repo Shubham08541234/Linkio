@@ -6,7 +6,8 @@ import {
   serial,
   integer,
   date,
-  unique
+  unique,
+  index
 } from 'drizzle-orm/pg-core'
 
 // --- Better Auth required tables -------------------------------------------
@@ -21,6 +22,36 @@ export const user = pgTable('user', {
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
+
+export const apiKeys = pgTable(
+  "apiKeys",
+  {
+    id: serial("id").primaryKey(),
+
+    userId: text("userId")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "cascade",
+      }),
+
+    name: text("name").notNull(),
+
+    keyHash: text("keyHash").notNull().unique(),
+
+    keyPrefix: text("keyPrefix").notNull(),
+
+    lastUsedAt: timestamp("lastUsedAt"),
+
+    createdAt: timestamp("createdAt")
+      .notNull()
+      .defaultNow(),
+
+    revokedAt: timestamp("revokedAt"),
+  },
+  (table) => [
+    index("apiKeys_userId_idx").on(table.userId),
+  ]
+);
 
 export const session = pgTable('session', {
   id: text('id').primaryKey(),
