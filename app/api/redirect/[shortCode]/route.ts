@@ -7,6 +7,7 @@ import {UAParser} from 'ua-parser-js'
 import { IPinfoWrapper } from 'node-ipinfo'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
+import { redis } from '@/lib/redis'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,18 +18,26 @@ export async function GET(
   const { shortCode } = await params
   const headersList = await headers()
 
-  // Get URL from database
-  const result = await db
-    .select()
-    .from(urls)
-    .where(eq(urls.shortCode, shortCode))
-    .limit(1)
+  //get url from redis
+  const cacheKey = `linkio:url:${shortCode}`
+  let url = await redis.get<typeof urls.$inferSelect>(cacheKey);
 
-  if (!result[0]) {
-    return new Response('Short URL not found', { status: 404 })
+  if(!url){
+    // Get URL from database
+    const result = await db
+      .select()
+      .from(urls)
+      .where(eq(urls.shortCode, shortCode))
+      .limit(1)
+
+    if(!result[0]){
+      return new Response('short URL not found', {status: 404});
+    }
+
+    url = result[0];
+
+    await redis.set(cacheKey, url, { ex: 60 * 5 })
   }
-
-  const url = result[0]
 
   // Check if expired
   if (url.expiresAt && url.expiresAt < new Date()) {
