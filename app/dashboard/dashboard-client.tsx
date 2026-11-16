@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { createUrl, getUrls, deleteUrl, updateUrl } from "@/app/actions/urls";
+import { createUrl, deleteUrl } from "@/app/actions/urls";
 import {
   Plus,
   LogOut,
-  Copy,
-  Trash2,
-  ExternalLink,
-  Settings,
   CheckCircle2,
   XCircle,
   MailWarning,
+  Link2,
+  Code2,
+  MousePointerClick,
+  Search,
+  ArrowUpRight,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import CreateUrlDialog from "./create-url-dialog";
 import UrlTable from "./url-table";
@@ -34,8 +36,8 @@ interface Url {
   id: number;
   shortCode: string;
   originalUrl: string;
-  customAlias?: string;
-  title?: string;
+  customAlias?: string | null;
+  title?: string | null;
   clicks: number;
   createdAt: Date;
 }
@@ -46,27 +48,57 @@ interface User {
   emailVerified: boolean;
 }
 
+interface DashboardStats {
+  totalLinks: number;
+  totalClicks: number;
+}
+
 export default function DashboardClient({
   initialUrls,
+  stats,
   user,
 }: {
   initialUrls: Url[];
+  stats: DashboardStats;
   user: User;
 }) {
   const router = useRouter();
   const [urls, setUrls] = useState<Url[]>(initialUrls);
+  const [dashboardStats, setDashboardStats] = useState(stats);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "popular">("newest");
 
   const initial =
     user.name?.charAt(0).toUpperCase() ?? user.email.charAt(0).toUpperCase();
+
+  const query = search.trim().toLowerCase();
+  const visibleUrls = urls
+    .filter((url) =>
+      [url.title ?? "", url.originalUrl, url.shortCode].some((value) =>
+        value.toLowerCase().includes(query),
+      ),
+    )
+    .sort((a, b) =>
+      sortBy === "popular"
+        ? b.clicks - a.clicks
+        : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  const averageClicks =
+    dashboardStats.totalLinks > 0
+      ? Math.round(dashboardStats.totalClicks / dashboardStats.totalLinks)
+      : 0;
 
   const handleCreateUrl = async (data: any) => {
     try {
       setIsLoading(true);
       const newUrl = await createUrl(data);
-      setUrls([newUrl, ...urls]);
+      setUrls((currentUrls) => [newUrl, ...currentUrls]);
+      setDashboardStats((currentStats) => ({
+        totalLinks: currentStats.totalLinks + 1,
+        totalClicks: currentStats.totalClicks + newUrl.clicks,
+      }));
       setIsCreateOpen(false);
     } catch (error) {
       console.error("Failed to create URL:", error);
@@ -80,7 +112,14 @@ export default function DashboardClient({
 
     try {
       await deleteUrl(id);
-      setUrls(urls.filter((u) => u.id !== id));
+      const deletedUrl = urls.find((url) => url.id === id);
+      setUrls((currentUrls) => currentUrls.filter((url) => url.id !== id));
+      if (deletedUrl) {
+        setDashboardStats((currentStats) => ({
+          totalLinks: Math.max(0, currentStats.totalLinks - 1),
+          totalClicks: Math.max(0, currentStats.totalClicks - deletedUrl.clicks),
+        }));
+      }
     } catch (error) {
       console.error("Failed to delete URL:", error);
     }
@@ -113,127 +152,329 @@ export default function DashboardClient({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link
-            href="/"
-            className="text-2xl font-bold bg-linear-to-r from-primary to-accent bg-clip-text"
-          >
+    <div className="min-h-screen bg-background text-foreground">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-card/30 px-5 py-6 lg:flex">
+        <Link
+          href="/"
+          className="mb-10 inline-flex items-center gap-2 text-2xl font-bold tracking-tight"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Link2 className="h-5 w-5" />
+          </span>
+          <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
             Linkio
+          </span>
+        </Link>
+
+        <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+          Workspace
+        </p>
+        <nav className="space-y-1">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 rounded-xl bg-primary/10 px-3 py-2.5 text-sm font-medium text-primary"
+            aria-current="page"
+          >
+            <Link2 className="h-4 w-4" />
+            Links
           </Link>
-          <div className="flex gap-4 items-center">
-            <Button
-              onClick={() => setIsCreateOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="w-4 h-4 mr-2" /> New Link
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button className="flex items-center justify-center h-9 w-9 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer" />
-                }
-              >
-                {initial}
-              </DropdownMenuTrigger>
+          <Link
+            href="/dashboard/devloper"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+          >
+            <Code2 className="h-4 w-4" />
+            Developer API
+          </Link>
+        </nav>
 
-              <DropdownMenuPortal>
-                <DropdownMenuContent align="end" className="w-64 z-50">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col gap-1">
-                        <div className="text-sm font-medium text-foreground">
-                          {user.name}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-muted-foreground truncate">
-                            {user.email}
-                          </span>
-                          {user.emailVerified ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
-                          ) : (
-                            <XCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
-                          )}
-                        </div>
-                        <span
-                          className={`text-[11px] font-medium w-fit px-1.5 py-0.5 rounded-full mt-0.5 ${
-                            user.emailVerified
-                              ? "bg-green-100 text-green-700"
-                              : "bg-destructive/10 text-destructive"
-                          }`}
-                        >
-                          {user.emailVerified ? "Verified" : "Not verified"}
-                        </span>
-                      </div>
-                    </DropdownMenuLabel>
-
-                    <DropdownMenuSeparator />
-
-                    {!user.emailVerified && (
-                      <DropdownMenuItem
-                        onClick={() => handleEmailVerification(user.email)}
-                        className="gap-2 cursor-pointer"
-                      >
-                        <MailWarning className="h-4 w-4" />
-                        Verify Email
-                      </DropdownMenuItem>
-                    )}
-
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="gap-2 cursor-pointer text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Your Links</h1>
-          <p className="text-muted-foreground">
-            Manage and track all your shortened URLs
+        <div className="mt-auto rounded-2xl border border-border bg-background/70 p-4">
+          <p className="text-sm font-semibold">Your links, at a glance</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Create short links and follow their performance from one place.
           </p>
+          <Button
+            className="mt-4 w-full"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Create a link
+          </Button>
         </div>
+      </aside>
 
-        {urls.length === 0 ? (
-          <div className="text-center py-12 rounded-lg border border-border bg-card/30">
-            <h3 className="text-xl font-semibold mb-2">No links yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first short link to get started
-            </p>
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xl font-bold tracking-tight lg:hidden"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Link2 className="h-4 w-4" />
+              </span>
+              <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
+                Linkio
+              </span>
+            </Link>
+            <div className="hidden text-sm text-muted-foreground lg:block">
+              Workspace <span className="mx-2 text-border">/</span>{" "}
+              <span className="text-foreground">Links</span>
+            </div>
+            <div className="ml-auto flex items-center gap-3">
+              <Button
+                onClick={() => setIsCreateOpen(true)}
+                className="hidden sm:inline-flex"
+              >
+                <Plus className="h-4 w-4" /> New link
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <button
+                      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                      aria-label="Open account menu"
+                    />
+                  }
+                >
+                  {initial}
+                </DropdownMenuTrigger>
+
+                <DropdownMenuPortal>
+                  <DropdownMenuContent align="end" className="z-50 w-64">
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-medium text-foreground">
+                            {user.name || user.email}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate text-xs text-muted-foreground">
+                              {user.email}
+                            </span>
+                            {user.emailVerified ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                            ) : (
+                              <XCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                            )}
+                          </div>
+                          <span
+                            className={`mt-0.5 w-fit rounded-full px-1.5 py-0.5 text-[11px] font-medium ${
+                              user.emailVerified
+                                ? "bg-green-100 text-green-700"
+                                : "bg-destructive/10 text-destructive"
+                            }`}
+                          >
+                            {user.emailVerified ? "Verified" : "Not verified"}
+                          </span>
+                        </div>
+                      </DropdownMenuLabel>
+
+                      <DropdownMenuSeparator />
+
+                      {!user.emailVerified && (
+                        <DropdownMenuItem
+                          onClick={() => handleEmailVerification(user.email)}
+                          className="cursor-pointer gap-2"
+                        >
+                          <MailWarning className="h-4 w-4" />
+                          Verify Email
+                        </DropdownMenuItem>
+                      )}
+
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+              </DropdownMenu>
+            </div>
+          </div>
+        </header>
+
+        <nav className="flex gap-2 overflow-x-auto border-b border-border px-4 py-2.5 lg:hidden">
+          <Link
+            href="/dashboard"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary"
+            aria-current="page"
+          >
+            <Link2 className="h-4 w-4" />
+            Links
+          </Link>
+          <Link
+            href="/dashboard/devloper"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+          >
+            <Code2 className="h-4 w-4" />
+            Developer API
+          </Link>
+        </nav>
+
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mb-2 text-sm font-medium text-primary">
+                Link management
+              </p>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Your links
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                Create, organize, and track your shortened URLs.
+              </p>
+            </div>
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="sm:hidden"
             >
-              <Plus className="w-4 h-4 mr-2" /> Create First Link
+              <Plus className="h-4 w-4" /> New link
             </Button>
           </div>
-        ) : (
-          <UrlTable
-            urls={urls}
-            onDelete={handleDeleteUrl}
-            onCopy={handleCopyLink}
-          />
-        )}
-      </main>
 
-      {/* Create URL Dialog */}
+          <section
+            aria-label="Link performance overview"
+            className="mb-8 grid gap-4 sm:grid-cols-3"
+          >
+            <StatCard
+              label="Total links"
+              value={dashboardStats.totalLinks.toLocaleString()}
+              detail="Active links in your workspace"
+              icon={<Link2 className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Total clicks"
+              value={dashboardStats.totalClicks.toLocaleString()}
+              detail="Across all active links"
+              icon={<MousePointerClick className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Average clicks"
+              value={averageClicks.toLocaleString()}
+              detail="Clicks per active link"
+              icon={<ChartNoAxesCombined className="h-5 w-5" />}
+            />
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-border bg-card/30">
+            <div className="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div>
+                <h2 className="font-semibold">Recent links</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Showing your latest {urls.length} links
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <label className="relative block sm:w-64">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <span className="sr-only">Search recent links</span>
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search recent links"
+                    className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/30"
+                  />
+                </label>
+                <label>
+                  <span className="sr-only">Sort links</span>
+                  <select
+                    value={sortBy}
+                    onChange={(event) =>
+                      setSortBy(
+                        event.target.value === "popular" ? "popular" : "newest",
+                      )
+                    }
+                    className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30 sm:w-40"
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="popular">Most clicked</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            {urls.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Link2 className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold">No links yet</h3>
+                <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+                  Create your first short link and its click activity will show
+                  up here.
+                </p>
+                <Button
+                  onClick={() => setIsCreateOpen(true)}
+                  className="mt-5"
+                >
+                  <Plus className="h-4 w-4" /> Create your first link
+                </Button>
+              </div>
+            ) : visibleUrls.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+                <Search className="mx-auto mb-3 h-6 w-6 text-muted-foreground" />
+                <h3 className="font-semibold">No matching links</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Try a different title, URL, or short code.
+                </p>
+              </div>
+            ) : (
+              <UrlTable
+                urls={visibleUrls}
+                onDelete={handleDeleteUrl}
+                onCopy={handleCopyLink}
+              />
+            )}
+          </section>
+          <p className="mt-4 flex items-center gap-1 text-xs text-muted-foreground">
+            Need API access?{" "}
+            <Link
+              href="/dashboard/devloper"
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
+              Visit Developer API <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </p>
+        </main>
+      </div>
+
       <CreateUrlDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         onSubmit={handleCreateUrl}
         isLoading={isLoading}
       />
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  detail,
+  icon,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 p-5 transition-colors hover:bg-card/70">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">{detail}</p>
+        </div>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          {icon}
+        </span>
+      </div>
     </div>
   );
 }

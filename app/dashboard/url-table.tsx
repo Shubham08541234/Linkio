@@ -11,7 +11,7 @@ interface Url {
   id: number;
   shortCode: string;
   originalUrl: string;
-  title?: string;
+  title?: string | null;
   clicks: number;
   createdAt: Date;
 }
@@ -27,13 +27,9 @@ export default function UrlTable({
 }) {
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
+      day: "numeric",
+      month: "short",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
     }).format(new Date(date));
   };
 
@@ -45,27 +41,27 @@ export default function UrlTable({
   };
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-card/50 border-b border-border">
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[760px]">
+        <thead className="border-b border-border bg-background/50">
           <tr>
-            <th className="text-left px-6 py-3 font-semibold text-foreground">
+            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Short Link
             </th>
 
-            <th className="text-left px-6 py-3 font-semibold text-foreground">
-              Title
+            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Destination
             </th>
 
-            <th className="text-left px-6 py-3 font-semibold text-foreground">
+            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Clicks
             </th>
 
-            <th className="text-left px-6 py-3 font-semibold text-foreground">
+            <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Created
             </th>
 
-            <th className="text-right px-6 py-3 font-semibold text-foreground">
+            <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Actions
             </th>
           </tr>
@@ -78,65 +74,82 @@ export default function UrlTable({
             return (
               <tr
                 key={url.id}
-                className="border-b border-border hover:bg-card/30 transition"
+                className="border-b border-border/70 transition-colors last:border-b-0 hover:bg-card/60"
               >
-                <td className="px-6 py-4">
-                  <code className="text-sm font-mono bg-card/50 px-3 py-1 rounded text-primary">
-                    {url.shortCode}
-                  </code>
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <ExternalLink className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="font-mono text-sm font-medium text-primary">
+                        {url.shortCode}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {url.clicks.toLocaleString()}{" "}
+                        {url.clicks === 1 ? "click" : "clicks"}
+                      </p>
+                    </div>
+                  </div>
                 </td>
 
-                <td className="px-6 py-4">
-                  <div className="truncate max-w-xs">
-                    <p className="text-foreground font-medium">
-                      {url.title || "Untitled"}
+                <td className="max-w-sm px-5 py-4">
+                  <div className="max-w-sm">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {url.title || "Untitled link"}
                     </p>
-
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
                       {url.originalUrl}
                     </p>
                   </div>
                 </td>
 
-                <td className="px-6 py-4">
-                  <span className="text-foreground font-semibold">
-                    {url.clicks}
+                <td className="px-5 py-4">
+                  <span className="inline-flex min-w-12 items-center justify-center rounded-full bg-muted/70 px-2.5 py-1 text-sm font-semibold tabular-nums">
+                    {url.clicks.toLocaleString()}
                   </span>
                 </td>
 
-                <td className="px-6 py-4">
-                  <span className="text-sm text-muted-foreground">
+                <td className="px-5 py-4">
+                  <span className="whitespace-nowrap text-sm text-muted-foreground">
                     {formatDate(url.createdAt)}
                   </span>
                 </td>
 
-                <td className="px-6 py-4">
-                  <div className="flex justify-end gap-2">
+                <td className="px-5 py-4">
+                  <div className="flex justify-end gap-1">
                     {/* Copy */}
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
                       onClick={() => onCopy(url.shortCode)}
                       title="Copy link"
+                      aria-label={`Copy short link ${url.shortCode}`}
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="h-4 w-4" />
                     </Button>
 
                     {/* Open */}
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
                       onClick={() => window.open(shortUrl, "_blank")}
                       title="Open link"
+                      aria-label={`Open short link ${url.shortCode}`}
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
 
                     {/* QR Code */}
                     <Dialog.Root>
                       <Dialog.Trigger
                         render={
-                          <Button size="sm" variant="ghost" title="QR Code" />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="QR Code"
+                            aria-label={`Show QR code for ${url.shortCode}`}
+                          />
                         }
                       >
                         <QrCode className="w-4 h-4" />
@@ -194,21 +207,23 @@ export default function UrlTable({
 
                     {/* Analytics */}
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
                       onClick={() => router.push(`/dashboard/analytics/${url.id}`)}
                       title="View analytics"
+                      aria-label={`View analytics for ${url.shortCode}`}
                     >
                       <ChartNoAxesCombined className="w-4 h-4" />
                     </Button>
 
                     {/* Delete */}
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
                       onClick={() => onDelete(url.id)}
                       className="text-destructive hover:text-destructive"
                       title="Delete link"
+                      aria-label={`Delete short link ${url.shortCode}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
