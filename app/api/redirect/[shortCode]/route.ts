@@ -8,6 +8,7 @@ import { IPinfoWrapper } from 'node-ipinfo'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 import { redis } from '@/lib/redis'
+import { after } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -89,12 +90,12 @@ export async function GET(
   }
 
   // Record the click
-  await recordClickInBackground(url.id, url.userId, {
+  after(async () => await recordClickInBackground(url.id, url.userId, {
     userAgent,
     referrer,
     ipAddress,
     visitorId
-  })
+  }))
 
   // Redirect to original URL
   redirect(url.originalUrl)
