@@ -20,6 +20,9 @@ export default function CreateUrlDialog({
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [customAlias, setCustomAlias] = useState('')
+  const [description, setDescription] = useState('')
+  const [password, setPassword] = useState('')
+  const [maxClicks, setMaxClicks] = useState(1000)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,10 +39,16 @@ export default function CreateUrlDialog({
         originalUrl: url,
         title: title || undefined,
         customAlias: customAlias || undefined,
+        description: description || undefined,
+        password: password || undefined,
+        maxClicks: maxClicks || undefined,
       })
       setUrl('')
       setTitle('')
       setCustomAlias('')
+      setDescription('')
+      setPassword('')
+      setMaxClicks(1000)
     } catch (err: any) {
       setError(err.message || 'Failed to create URL')
     }
@@ -48,7 +57,7 @@ export default function CreateUrlDialog({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
       <div className="bg-card rounded-lg p-6 max-w-md w-full mx-4">
         <h2 className="text-2xl font-bold mb-4">Create Short Link</h2>
 
@@ -84,6 +93,40 @@ export default function CreateUrlDialog({
               value={customAlias}
               onChange={(e) => setCustomAlias(e.target.value)}
               placeholder="myalias"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Description (Optional)</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="mydescription"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isLoading}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Password (Optional)</label>
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="mypassword"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isLoading}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Max Clicks (Optional)</label>
+            <input
+              type='number'
+              value={maxClicks}
+              onChange={(e) => setMaxClicks(Number(e.target.value))}
+              placeholder="1000"
               className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isLoading}
             />
