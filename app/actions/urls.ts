@@ -115,6 +115,20 @@ export async function getUrls(options?: {
   return await query
 }
 
+export async function getDashboardStats(userIdOverride?: String) {
+  const userId = (await getUserId(userIdOverride)).toString()
+
+  const [stats] = await db
+    .select({
+      totalLinks: sql<number>`count(*)`.mapWith(Number),
+      totalClicks: sql<number>`coalesce(sum(${urls.clicks}), 0)`.mapWith(Number),
+    })
+    .from(urls)
+    .where(and(eq(urls.userId, userId), eq(urls.archived, false)))
+
+  return stats
+}
+
 // Example modification in actions/urls.ts
 
 export async function getUrlById(id: number, userIdOverride?: string) {

@@ -12,6 +12,8 @@ function generateShortCode(length = 7) {
     .slice(0, length);
 }
 
+
+// create new url
 export async function POST(request: Request) {
   try {
     const apiKey = await authenticateApiKey(request);
