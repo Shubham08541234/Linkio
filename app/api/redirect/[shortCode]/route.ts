@@ -18,25 +18,37 @@ export async function GET(
   const { shortCode } = await params
   const headersList = await headers()
 
-  //get url from redis
   const cacheKey = `linkio:url:${shortCode}`
-  let url = await redis.get<typeof urls.$inferSelect>(cacheKey);
+  let url: typeof urls.$inferSelect | null = null
+  let cacheAvailable = true
 
-  if(!url){
-    // Get URL from database
+  try {
+    url = await redis.get<typeof urls.$inferSelect>(cacheKey)
+  } catch (error) {
+    cacheAvailable = false
+    console.error('Failed to read redirect cache:', error)
+  }
+
+  if (!url) {
     const result = await db
       .select()
       .from(urls)
       .where(eq(urls.shortCode, shortCode))
       .limit(1)
 
-    if(!result[0]){
-      return new Response('short URL not found', {status: 404});
+    if (!result[0]) {
+      return new Response('Short URL not found', { status: 404 })
     }
 
-    url = result[0];
+    url = result[0]
 
-    await redis.set(cacheKey, url, { ex: 60 * 5 })
+    if (cacheAvailable) {
+      try {
+        await redis.set(cacheKey, url, { ex: 60 * 5 })
+      } catch (error) {
+        console.error('Failed to cache redirect URL:', error)
+      }
+    }
   }
 
   // Check if expired

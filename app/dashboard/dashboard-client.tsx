@@ -223,7 +223,7 @@ export default function DashboardClient({
             <div className="ml-auto flex items-center gap-3">
               <Button
                 onClick={() => setIsCreateOpen(true)}
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex cursor-pointer"
               >
                 <Plus className="h-4 w-4" /> New link
               </Button>
