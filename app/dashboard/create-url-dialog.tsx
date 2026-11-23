@@ -57,9 +57,17 @@ export default function CreateUrlDialog({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
-      <div className="bg-card rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4">Create Short Link</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onOpenChange(false)
+    }}>
+      <div className="max-h-[calc(100svh-2rem)] w-full max-w-lg overflow-y-auto rounded-[24px] border border-border bg-card p-6 shadow-2xl sm:p-7">
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-primary">New destination</p>
+            <h2 className="text-2xl font-black tracking-tight">Create short link</h2>
+          </div>
+          <button type="button" onClick={() => onOpenChange(false)} className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Close dialog">×</button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

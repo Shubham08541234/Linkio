@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Linkio - URL Shortener with Analytics',
-  description: 'Create branded short links with powerful analytics. Track every click and understand your audience in real-time.',
+  title: 'Linkio — Make every click count',
+  description: 'Create powerful short links, understand every click, and turn attention into momentum.',
   icons: {
     icon: [
       {

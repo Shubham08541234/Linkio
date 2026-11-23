@@ -153,15 +153,15 @@ export default function DashboardClient({
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-card/30 px-5 py-6 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-border bg-[oklch(0.09_0.012_255)] px-5 py-6 lg:flex">
         <Link
           href="/"
           className="mb-10 inline-flex items-center gap-2 text-2xl font-bold tracking-tight"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+          <span className="flex h-9 w-9 rotate-3 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Link2 className="h-5 w-5" />
           </span>
-          <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
+          <span className="tracking-tight text-foreground">
             Linkio
           </span>
         </Link>
@@ -203,7 +203,7 @@ export default function DashboardClient({
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
             <Link
               href="/"
@@ -212,7 +212,7 @@ export default function DashboardClient({
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Link2 className="h-4 w-4" />
               </span>
-              <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="tracking-tight text-foreground">
                 Linkio
               </span>
             </Link>
