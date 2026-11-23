@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
-  Sector,
   Tooltip,
   Legend,
   ResponsiveContainer,
@@ -21,12 +20,12 @@ interface BrowserDistributionProps {
 }
 
 const COLORS = [
-  "#60a5fa",
-  "#34d399",
+  "#a3e635",
+  "#38bdf8",
   "#fbbf24",
-  "#f87171",
-  "#a78bfa",
+  "#c084fc",
   "#fb7185",
+  "#34d399",
 ];
 
 export default function BrowserDistribution({
@@ -64,32 +63,30 @@ export default function BrowserDistribution({
     fetchBrowserStats();
   }, [urlId]);
 
-  const renderShape = (props: any) => {
-    const { index, ...rest } = props;
-
-    return <Sector {...rest} fill={COLORS[index % COLORS.length]} />;
-  };
+  const total = data.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="rounded-lg border border-border p-6 mt-6">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Browser Distribution</h2>
-
-        <p className="text-sm text-muted-foreground">
+    <section className="rounded-3xl border border-border bg-card/60 p-5 shadow-xl shadow-black/10 sm:p-6">
+      <div className="mb-5">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-lime-300">
+          Technology
+        </p>
+        <h2 className="text-lg font-semibold tracking-tight">Browser mix</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Browsers used to access your link
         </p>
       </div>
 
       {loading ? (
-        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-          Loading...
+        <div className="flex h-[290px] items-center justify-center">
+          <div className="h-40 w-40 animate-pulse rounded-full border-[22px] border-muted/70" />
         </div>
       ) : data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+        <div className="flex h-[290px] items-center justify-center rounded-2xl border border-dashed border-border bg-background/30 text-sm text-muted-foreground">
           No browser data available
         </div>
       ) : (
-        <div className="h-[300px] w-full">
+        <div className="relative h-[290px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -97,11 +94,12 @@ export default function BrowserDistribution({
                 dataKey="count"
                 nameKey="browser"
                 cx="50%"
-                cy="50%"
-                innerRadius={70}
-                outerRadius={100}
-                paddingAngle={3}
-                shape={renderShape}
+                cy="44%"
+                innerRadius={62}
+                outerRadius={88}
+                paddingAngle={4}
+                stroke="none"
+                cornerRadius={5}
               >
                 {data.map((entry, index) => (
                   <Cell
@@ -111,13 +109,33 @@ export default function BrowserDistribution({
                 ))}
               </Pie>
 
-              <Tooltip />
-
-              <Legend />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#111821",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 12,
+                  color: "#f4f4f5",
+                }}
+                itemStyle={{ color: "#f4f4f5" }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: 12, color: "#a1a1aa" }}
+              />
             </PieChart>
           </ResponsiveContainer>
+          <div className="pointer-events-none absolute left-1/2 top-[44%] -translate-x-1/2 -translate-y-1/2 text-center">
+            <p className="text-2xl font-bold tracking-tight">
+              {total.toLocaleString()}
+            </p>
+            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              visits
+            </p>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
